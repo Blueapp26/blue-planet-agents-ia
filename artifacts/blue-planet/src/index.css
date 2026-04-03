@@ -1,9 +1,10 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
+
+@source "../src/**/*.{ts,tsx,js,jsx}";
 
 body {
   background-color: #08090e;
+  color: #f1f5f9;
 }
 
 /* Custom scrollbar for dark theme */
