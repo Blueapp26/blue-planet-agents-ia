@@ -16,6 +16,15 @@ pnpm workspace monorepo using TypeScript. Each package manages its own dependenc
 - **API codegen**: Orval (from OpenAPI spec)
 - **Build**: esbuild (CJS bundle)
 
+## Artifacts
+
+### Blue Planet Command Center (`artifacts/blue-planet`)
+- React + Vite + TypeScript, served at `/`
+- Structure: `src/components`, `src/pages`, `src/lib`
+- Pages: Dashboard, Oceans, Regions, Activity, Settings
+- UI: Tailwind CSS v4, Radix UI, Lucide icons, Wouter routing
+- No backend dependencies — static frontend only
+
 ## Key Commands
 
 - `pnpm run typecheck` — full typecheck across all packages
