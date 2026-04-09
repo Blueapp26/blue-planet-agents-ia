@@ -1,56 +1,149 @@
-import { Bot } from "lucide-react";
+import { useEffect, useState } from "react";
+import { Org, Users } from "lucide-react";
 import { Card } from "../components/Card";
-import { PoleCard } from "../components/PoleCard";
-import { SUPPORT_POLES, BUSINESS_UNITS } from "../constants/data";
+import { SectionHeader } from "../components/SectionHeader";
+
+interface BusinessUnit {
+  id?: string;
+  name: string;
+  icon?: string;
+  description?: string;
+  manager?: string;
+}
+
+interface SupportPole {
+  id?: string;
+  name: string;
+  icon?: string;
+  description?: string;
+  manager?: string;
+}
+
+interface OrgData {
+  businessUnits?: BusinessUnit[];
+  supportPoles?: SupportPole[];
+}
+
+const WEBHOOK_URL = "https://blueplanet.app.n8n.cloud/webhook/dashboard-data";
 
 export function OrgTab() {
+  const [businessUnits, setBusinessUnits] = useState<BusinessUnit[]>([]);
+  const [supportPoles, setSupportPoles] = useState<SupportPole[]>([]);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(WEBHOOK_URL)
+      .then((r) => r.json())
+      .then((d: OrgData) => {
+        if (d.businessUnits?.length) {
+          setBusinessUnits(d.businessUnits);
+        }
+        if (d.supportPoles?.length) {
+          setSupportPoles(d.supportPoles);
+        }
+      })
+      .catch((e) => console.error("Org fetch error:", e))
+      .finally(() => setLoading(false));
+  }, []);
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <SectionHeader
+          label="Organisation"
+          title="Structure organisationnelle"
+          icon={Org}
+          color="purple"
+        />
+        <p className="text-center text-slate-500">Chargement...</p>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-8">
-      {/* Director node */}
-      <div className="flex flex-col items-center">
-        <Card className="w-full max-w-sm border-violet-500/15 p-6 text-center">
-          <div className="mx-auto flex h-12 w-12 items-center justify-center rounded-xl bg-gradient-to-br from-violet-500/20 to-fuchsia-500/15 border border-violet-500/20">
-            <Bot className="h-6 w-6 text-violet-400" />
+    <div className="space-y-6">
+      <SectionHeader
+        label="Organisation"
+        title="Structure organisationnelle"
+        icon={Org}
+        color="purple"
+      />
+
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        {/* Business Units */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Org className="h-5 w-5 text-amber-400" />
+            <h2 className="text-lg font-semibold text-white">Unités métier</h2>
           </div>
-          <h2 className="mt-3 text-lg font-bold text-white">Directeur IA</h2>
-          <p className="mt-1 text-xs text-slate-500">Arbitre les priorités, distribue les tâches, consolide la synthèse</p>
-          <div className="mt-3 inline-flex rounded-md bg-emerald-500/10 px-2.5 py-1 text-[10px] font-semibold text-emerald-400 border border-emerald-500/20">
-            Claude orchestrateur
+
+          {businessUnits.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-slate-500">Aucune unité métier disponible</p>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {businessUnits.map((unit, idx) => (
+                <Card
+                  key={unit.id || idx}
+                  className="p-4 hover:border-white/[0.12] transition"
+                >
+                  <div>
+                    <h3 className="font-medium text-white">{unit.name}</h3>
+                    {unit.description && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        {unit.description}
+                      </p>
+                    )}
+                    {unit.manager && (
+                      <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                        <Users className="h-3 w-3" />
+                        <span>{unit.manager}</span>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
+        </div>
+
+        {/* Support Poles */}
+        <div className="space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Users className="h-5 w-5 text-cyan-400" />
+            <h2 className="text-lg font-semibold text-white">Pôles support</h2>
           </div>
-        </Card>
-        <div className="h-8 w-px bg-gradient-to-b from-violet-500/40 to-transparent" />
-      </div>
 
-      {/* Level 1 */}
-      <div>
-        <div className="text-center mb-4">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-sky-400/70">Niveau 1</span>
-          <h3 className="text-lg font-semibold text-white">Pôles transverses</h3>
-        </div>
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-sky-500/20 to-transparent mb-4" />
-        <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5">
-          {SUPPORT_POLES.map((pole) => (
-            <PoleCard key={pole.id} pole={pole} />
-          ))}
-        </div>
-      </div>
-
-      {/* Connector */}
-      <div className="flex justify-center">
-        <div className="h-8 w-px bg-gradient-to-b from-sky-500/30 to-transparent" />
-      </div>
-
-      {/* Level 2 */}
-      <div>
-        <div className="text-center mb-4">
-          <span className="text-[10px] font-semibold uppercase tracking-[0.25em] text-indigo-400/70">Niveau 2</span>
-          <h3 className="text-lg font-semibold text-white">Branches business</h3>
-        </div>
-        <div className="h-px w-full bg-gradient-to-r from-transparent via-indigo-500/20 to-transparent mb-4" />
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {BUSINESS_UNITS.map((unit) => (
-            <PoleCard key={unit.id} pole={unit} />
-          ))}
+          {supportPoles.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-slate-500">Aucun pôle support disponible</p>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {supportPoles.map((pole, idx) => (
+                <Card
+                  key={pole.id || idx}
+                  className="p-4 hover:border-white/[0.12] transition"
+                >
+                  <div>
+                    <h3 className="font-medium text-white">{pole.name}</h3>
+                    {pole.description && (
+                      <p className="text-xs text-slate-400 mt-1">
+                        {pole.description}
+                      </p>
+                    )}
+                    {pole.manager && (
+                      <div className="flex items-center gap-2 mt-2 text-xs text-slate-500">
+                        <Users className="h-3 w-3" />
+                        <span>{pole.manager}</span>
+                      </div>
+                    )}
+                  </div>
+                </Card>
+              ))}
+            </div>
+          )}
         </div>
       </div>
     </div>

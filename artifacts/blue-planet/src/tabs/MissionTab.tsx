@@ -1,183 +1,216 @@
-import {
-  ArrowRight,
-  Bot,
-  CheckCircle2,
-  ChevronRight,
-  ClipboardList,
-  Loader2,
-  Play,
-  Target,
-  Zap,
-} from "lucide-react";
+import { useEffect, useState } from "react";
+import { Rocket, Lightbulb, CheckCircle2, Clock } from "lucide-react";
 import { Card } from "../components/Card";
 import { SectionHeader } from "../components/SectionHeader";
-import { ALL_POLE_OPTIONS, MISSION_TEMPLATES } from "../constants/data";
-import type { DirectorResponse } from "../constants/data";
 
-interface Props {
-  mission: string;
-  setMission: (mission: string) => void;
-  selectedPoles: string[];
-  togglePole: (pole: string) => void;
-  loading: boolean;
-  errorMessage: string;
-  directorResult: DirectorResponse | null;
-  onRunAnalysis: () => void;
+interface Mission {
+  id?: string;
+  title: string;
+  description: string;
+  status?: "active" | "pending" | "completed";
+  priority?: "high" | "medium" | "low";
+  deadline?: string;
 }
 
-export function MissionTab({
-  mission,
-  setMission,
-  selectedPoles,
-  togglePole,
-  loading,
-  errorMessage,
-  directorResult,
-  onRunAnalysis,
-}: Props) {
+interface AIAnalysis {
+  mission: string;
+  analysis: string;
+  recommendations: string[];
+  timestamp?: string;
+}
+
+const WEBHOOK_URL = "https://blueplanet.app.n8n.cloud/webhook/dashboard-data";
+
+export function MissionTab() {
+  const [missions, setMissions] = useState<Mission[]>([]);
+  const [aiAnalysis, setAIAnalysis] = useState<AIAnalysis | null>(null);
+  const [loading, setLoading] = useState(true);
+
+  useEffect(() => {
+    fetch(WEBHOOK_URL)
+      .then((r) => r.json())
+      .then((d: any) => {
+        if (d.missionTemplates?.length) {
+          setMissions(d.missionTemplates);
+        }
+        if (d.aiAnalysis) {
+          setAIAnalysis(d.aiAnalysis);
+        }
+      })
+      .catch((e) => console.error("Mission fetch error:", e))
+      .finally(() => setLoading(false));
+  }, []);
+
+  const getStatusColor = (status?: string) => {
+    switch (status?.toLowerCase()) {
+      case "active":
+        return "bg-emerald-500/10 text-emerald-400 border-emerald-500/20";
+      case "completed":
+        return "bg-blue-500/10 text-blue-400 border-blue-500/20";
+      case "pending":
+        return "bg-amber-500/10 text-amber-400 border-amber-500/20";
+      default:
+        return "bg-slate-500/10 text-slate-400 border-slate-500/20";
+    }
+  };
+
+  const getPriorityColor = (priority?: string) => {
+    switch (priority?.toLowerCase()) {
+      case "high":
+        return "text-red-400";
+      case "medium":
+        return "text-amber-400";
+      case "low":
+        return "text-emerald-400";
+      default:
+        return "text-slate-400";
+    }
+  };
+
+  const getStatusIcon = (status?: string) => {
+    switch (status?.toLowerCase()) {
+      case "completed":
+        return <CheckCircle2 className="h-4 w-4" />;
+      case "active":
+        return <Rocket className="h-4 w-4" />;
+      case "pending":
+        return <Clock className="h-4 w-4" />;
+      default:
+        return <Lightbulb className="h-4 w-4" />;
+    }
+  };
+
+  if (loading) {
+    return (
+      <div className="space-y-6">
+        <SectionHeader
+          label="Missions"
+          title="Missions et directives IA"
+          icon={Rocket}
+          color="emerald"
+        />
+        <p className="text-center text-slate-500">Chargement...</p>
+      </div>
+    );
+  }
+
   return (
     <div className="space-y-6">
-      <div className="grid gap-6 lg:grid-cols-[1.2fr_0.8fr]">
-        {/* LEFT: Mission input */}
-        <div className="space-y-4">
-          <Card className="p-5">
-            <SectionHeader label="Mission" title="Instruction au Directeur IA" icon={Bot} color="violet" />
-            <div className="mt-4">
-              <textarea
-                value={mission}
-                onChange={(e) => setMission(e.target.value)}
-                placeholder="Décrivez votre mission ici..."
-                className="min-h-[200px] w-full resize-y rounded-lg border border-white/[0.08] bg-white/[0.02] p-4 text-sm text-slate-200 outline-none placeholder:text-slate-600 focus:border-white/15 transition"
-              />
-            </div>
+      <SectionHeader
+        label="Missions"
+        title="Missions et directives IA"
+        icon={Rocket}
+        color="emerald"
+      />
 
-            {/* Pole toggles */}
-            <div className="mt-4">
-              <p className="text-[10px] font-semibold uppercase tracking-[0.2em] text-slate-500 mb-3">Pôles activés</p>
-              <div className="flex flex-wrap gap-2">
-                {ALL_POLE_OPTIONS.map((pole) => {
-                  const active = selectedPoles.includes(pole);
-                  return (
-                    <button
-                      key={pole}
-                      onClick={() => togglePole(pole)}
-                      className={`rounded-lg border px-3 py-1.5 text-xs font-medium transition ${
-                        active
-                          ? "border-violet-500/30 bg-violet-500/15 text-violet-300"
-                          : "border-white/[0.06] bg-white/[0.02] text-slate-500 hover:border-white/10 hover:text-slate-400"
-                      }`}
-                    >
-                      {pole}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* Missions List */}
+        <div className="lg:col-span-2 space-y-4">
+          <div className="flex items-center gap-2 mb-4">
+            <Rocket className="h-5 w-5 text-emerald-400" />
+            <h2 className="text-lg font-semibold text-white">
+              Missions actives
+            </h2>
+          </div>
 
-            {/* Action button */}
-            <div className="mt-5 flex flex-wrap gap-3">
-              <button
-                onClick={onRunAnalysis}
-                disabled={loading}
-                className="flex items-center gap-2 rounded-lg bg-white px-5 py-2.5 text-sm font-semibold text-black transition hover:bg-slate-200 disabled:opacity-50 disabled:cursor-not-allowed"
-              >
-                {loading ? (
-                  <><Loader2 className="h-4 w-4 animate-spin" /> Analyse en cours...</>
-                ) : (
-                  <><Play className="h-3.5 w-3.5" /> Lancer l'analyse</>
-                )}
-              </button>
-            </div>
-
-            {errorMessage && (
-              <div className="mt-4 rounded-lg border border-red-500/20 bg-red-500/5 p-3 text-sm text-red-400">
-                {errorMessage}
-              </div>
-            )}
-          </Card>
-
-          {/* Templates */}
-          <Card className="p-5">
-            <SectionHeader label="Scénarios" title="Missions pré-configurées" icon={ClipboardList} color="slate" />
-            <div className="mt-4 space-y-2">
-              {MISSION_TEMPLATES.map((t) => (
-                <button
-                  key={t.label}
-                  onClick={() => setMission(t.prompt)}
-                  className="flex w-full items-center justify-between rounded-lg border border-white/[0.06] bg-white/[0.02] px-4 py-3 text-left text-sm text-slate-300 transition hover:border-white/10 hover:bg-white/[0.04] group"
+          {missions.length === 0 ? (
+            <Card className="p-8 text-center">
+              <p className="text-slate-500">Aucune mission disponible</p>
+            </Card>
+          ) : (
+            <div className="space-y-3">
+              {missions.map((mission, idx) => (
+                <Card
+                  key={mission.id || idx}
+                  className="p-4 hover:border-white/[0.12] transition"
                 >
-                  <span>{t.label}</span>
-                  <ArrowRight className="h-3.5 w-3.5 text-slate-600 transition group-hover:text-slate-400 group-hover:translate-x-0.5" />
-                </button>
+                  <div className="space-y-2">
+                    <div className="flex items-start justify-between gap-3">
+                      <div className="flex-1">
+                        <h3 className="font-medium text-white flex items-center gap-2">
+                          <span className={getPriorityColor(mission.priority)}>
+                            {getStatusIcon(mission.status)}
+                          </span>
+                          {mission.title}
+                        </h3>
+                        <p className="text-sm text-slate-400 mt-1">
+                          {mission.description}
+                        </p>
+                      </div>
+                      {mission.status && (
+                        <span
+                          className={`text-xs px-2 py-1 rounded border shrink-0 ${getStatusColor(
+                            mission.status,
+                          )}`}
+                        >
+                          {mission.status}
+                        </span>
+                      )}
+                    </div>
+
+                    {mission.deadline && (
+                      <div className="flex items-center gap-2 text-xs text-slate-500 pt-2">
+                        <Clock className="h-3 w-3" />
+                        Échéance:{" "}
+                        {new Date(mission.deadline).toLocaleDateString("fr-FR")}
+                      </div>
+                    )}
+                  </div>
+                </Card>
               ))}
             </div>
-          </Card>
+          )}
         </div>
 
-        {/* RIGHT: Results */}
+        {/* AI Analysis */}
         <div className="space-y-4">
-          {/* Diagnostic */}
-          <Card className="p-5">
-            <SectionHeader label="Diagnostic" title="Synthèse stratégique" icon={Bot} color="fuchsia" />
-            <div className="mt-4 rounded-lg border border-white/[0.06] bg-white/[0.02] p-4 min-h-[140px]">
-              <p className="text-sm leading-relaxed text-slate-400">
-                {directorResult?.diagnostic || "Le diagnostic apparaîtra ici après l'analyse."}
-              </p>
-            </div>
-          </Card>
+          <div className="flex items-center gap-2 mb-4">
+            <Lightbulb className="h-5 w-5 text-violet-400" />
+            <h2 className="text-lg font-semibold text-white">Analyse IA</h2>
+          </div>
 
-          {/* Priorities */}
-          <Card className="p-5">
-            <SectionHeader label="Priorités" title="Renvoyées par l'IA" icon={Target} color="violet" />
-            <div className="mt-4 space-y-2">
-              {(directorResult?.priorites || []).length > 0 ? (
-                directorResult!.priorites!.map((p, i) => (
-                  <div key={i} className="flex items-start gap-3 rounded-lg border border-white/[0.06] bg-white/[0.02] p-3">
-                    <span className="flex h-6 w-6 shrink-0 items-center justify-center rounded-md bg-violet-500/15 text-xs font-bold text-violet-400">
-                      {i + 1}
-                    </span>
-                    <p className="text-sm text-slate-300">{p}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-slate-600 italic">En attente d'analyse...</p>
+          {aiAnalysis ? (
+            <Card className="p-4 space-y-4">
+              <div>
+                <h3 className="text-sm font-medium text-violet-400 mb-2">
+                  {aiAnalysis.mission}
+                </h3>
+                <p className="text-sm text-slate-300">{aiAnalysis.analysis}</p>
+              </div>
+
+              {aiAnalysis.recommendations?.length > 0 && (
+                <div className="space-y-2 pt-4 border-t border-slate-700">
+                  <h4 className="text-xs font-medium text-slate-400 uppercase">
+                    Recommandations
+                  </h4>
+                  <ul className="space-y-1">
+                    {aiAnalysis.recommendations.map((rec, idx) => (
+                      <li
+                        key={idx}
+                        className="text-xs text-slate-300 flex gap-2"
+                      >
+                        <span className="text-emerald-400 shrink-0">→</span>
+                        <span>{rec}</span>
+                      </li>
+                    ))}
+                  </ul>
+                </div>
               )}
-            </div>
-          </Card>
 
-          {/* Actions par pôle */}
-          <Card className="p-5">
-            <SectionHeader label="Actions" title="Exécution par pôle" icon={CheckCircle2} color="emerald" />
-            <div className="mt-4 space-y-3">
-              {directorResult?.actionsParPole && Object.keys(directorResult.actionsParPole).length > 0 ? (
-                Object.entries(directorResult.actionsParPole).map(([pole, actions]) => (
-                  <div key={pole} className="rounded-lg border border-white/[0.06] bg-white/[0.02] p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-3">{pole}</p>
-                    <div className="space-y-2">
-                      {actions.map((action, i) => (
-                        <div key={i} className="flex items-start gap-2 text-sm text-slate-300">
-                          <ChevronRight className="mt-0.5 h-3.5 w-3.5 shrink-0 text-emerald-500" />
-                          <span>{action}</span>
-                        </div>
-                      ))}
-                    </div>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-slate-600 italic">En attente d'analyse...</p>
+              {aiAnalysis.timestamp && (
+                <p className="text-xs text-slate-500 pt-2">
+                  Mis à jour:{" "}
+                  {new Date(aiAnalysis.timestamp).toLocaleString("fr-FR")}
+                </p>
               )}
-            </div>
-          </Card>
-
-          {/* Prochaine étape */}
-          <Card className="border-emerald-500/10 p-5">
-            <SectionHeader label="Prochaine étape" title="Décision prioritaire" icon={Zap} color="emerald" />
-            <div className="mt-4 rounded-lg border border-emerald-500/10 bg-emerald-500/5 p-4">
-              <p className="text-sm leading-relaxed text-emerald-300/80">
-                {directorResult?.prochaineEtape || "La prochaine étape apparaîtra ici après l'analyse."}
+            </Card>
+          ) : (
+            <Card className="p-4 text-center">
+              <p className="text-xs text-slate-500">
+                Aucune analyse IA disponible
               </p>
-            </div>
-          </Card>
+            </Card>
+          )}
         </div>
       </div>
     </div>
