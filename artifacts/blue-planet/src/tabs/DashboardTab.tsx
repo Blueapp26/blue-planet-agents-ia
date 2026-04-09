@@ -25,49 +25,51 @@ interface Props {
   setSelectedUnit: (unit: string) => void;
 }
 
+const WEBHOOK_URL = "https://blueplanet.app.n8n.cloud/webhook/dashboard-data";
+
 export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
-  const [businessUnits, setBusinessUnits] = useState(DEFAULT_UNITS);
-  const [supportPoles, setSupportPoles] = useState(DEFAULT_POLES);
-  const [overviewCards, setOverviewCards] = useState(DEFAULT_OVERVIEW);
-  const [alerts, setAlerts] = useState(DEFAULT_ALERTS);
-  const [tools, setTools] = useState(DEFAULT_TOOLS);
+  const [businessUnits, setBusinessUnits] = useState<any[]>(DEFAULT_UNITS);
+  const [supportPoles, setSupportPoles] = useState<any[]>(DEFAULT_POLES);
+  const [overviewCards, setOverviewCards] = useState<any[]>(DEFAULT_OVERVIEW);
+  const [alerts, setAlerts] = useState<any[]>(DEFAULT_ALERTS);
+  const [tools, setTools] = useState<string[]>(DEFAULT_TOOLS);
 
   useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const response = await fetch(
-          "https://blueplanet.app.n8n.cloud/webhook/dashboard-data",
-        );
-        if (!response.ok) throw new Error("Erreur réseau");
-        const apiData = await response.json();
-        setBusinessUnits(apiData.businessUnits || DEFAULT_UNITS);
-        setSupportPoles(apiData.supportPoles || DEFAULT_POLES);
-        setOverviewCards(apiData.overviewCards || DEFAULT_OVERVIEW);
-        setAlerts(apiData.alerts || DEFAULT_ALERTS);
-        setTools(apiData.tools || DEFAULT_TOOLS);
-      } catch (error) {
-        console.error("Erreur:", error);
-      }
-    };
-    fetchData();
+    fetch(WEBHOOK_URL)
+      .then((r) => r.json())
+      .then((d) => {
+        if (d.businessUnits?.length) setBusinessUnits(d.businessUnits);
+        if (d.supportPoles?.length) setSupportPoles(d.supportPoles);
+        if (d.overviewCards?.length) setOverviewCards(d.overviewCards);
+        if (d.alerts?.length) setAlerts(d.alerts);
+        if (d.tools?.length) {
+          setTools(
+            d.tools.map((t: any) => (typeof t === "string" ? t : t.name || "")),
+          );
+        }
+      })
+      .catch((e) => console.error("Dashboard fetch error:", e));
   }, []);
 
   const filteredUnits =
     selectedUnit === "all"
       ? businessUnits
       : businessUnits.filter((u) => u.id === selectedUnit);
+
   const sortedByPriority = [...businessUnits].sort(
     (a, b) => (a.priority || 0) - (b.priority || 0),
   );
 
   return (
     <div className="space-y-6">
+      {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {overviewCards.map((card) => (
-          <OverviewCard key={card.title} card={card} />
+        {overviewCards.map((card, i) => (
+          <OverviewCard key={card.title ?? i} card={card} />
         ))}
       </div>
 
+      {/* Alertes + Priorités */}
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
         <Card className="p-5">
           <SectionHeader
@@ -95,12 +97,13 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
           />
           <div className="mt-4 space-y-2">
             {sortedByPriority.map((unit, i) => (
-              <PriorityRow key={unit.id} unit={unit} rank={i} />
+              <PriorityRow key={unit.id ?? i} unit={unit} rank={i} />
             ))}
           </div>
         </Card>
       </div>
 
+      {/* Branches business */}
       <div>
         <div className="flex items-center justify-between mb-4">
           <SectionHeader
@@ -123,12 +126,13 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
           </select>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredUnits.map((unit) => (
-            <PoleCard key={unit.id} pole={unit} />
+          {filteredUnits.map((unit, i) => (
+            <PoleCard key={unit.id ?? i} pole={unit} />
           ))}
         </div>
       </div>
 
+      {/* Pôles transverses */}
       <div>
         <SectionHeader
           label="Niveau 1"
@@ -137,12 +141,13 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
           color="sky"
         />
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {supportPoles.map((pole) => (
-            <PoleCard key={pole.id} pole={pole} compact />
+          {supportPoles.map((pole, i) => (
+            <PoleCard key={pole.id ?? i} pole={pole} compact />
           ))}
         </div>
       </div>
 
+      {/* Outils */}
       <Card className="p-5">
         <SectionHeader
           label="Stack"
@@ -151,9 +156,9 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
           color="emerald"
         />
         <div className="mt-4 flex flex-wrap gap-2">
-          {tools.map((tool) => (
+          {tools.map((tool, i) => (
             <span
-              key={tool}
+              key={i}
               className="rounded-md border border-white/[0.06] bg-white/[0.03] px-3 py-1.5 text-xs text-slate-400 transition hover:border-white/10 hover:text-slate-300"
             >
               {tool}
