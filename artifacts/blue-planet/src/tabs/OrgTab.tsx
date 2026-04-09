@@ -52,7 +52,7 @@ export function OrgTab() {
         <SectionHeader
           label="Organisation"
           title="Structure organisationnelle"
-          icon={Org}
+          icon={Network}
           color="purple"
         />
         <p className="text-center text-slate-500">Chargement...</p>
@@ -65,7 +65,7 @@ export function OrgTab() {
       <SectionHeader
         label="Organisation"
         title="Structure organisationnelle"
-        icon={Org}
+        icon={Network}
         color="purple"
       />
 
