@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Org, Users } from "lucide-react";
+import { Network, Users } from "lucide-react";
 import { Card } from "../components/Card";
 import { SectionHeader } from "../components/SectionHeader";
 
@@ -73,7 +73,7 @@ export function OrgTab() {
         {/* Business Units */}
         <div className="space-y-4">
           <div className="flex items-center gap-2 mb-4">
-            <Org className="h-5 w-5 text-amber-400" />
+            <Network className="h-5 w-5 text-amber-400" />
             <h2 className="text-lg font-semibold text-white">Unités métier</h2>
           </div>
 
