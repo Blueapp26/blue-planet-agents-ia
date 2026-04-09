@@ -13,11 +13,14 @@ import { AlertItem } from "../components/AlertItem";
 import { PriorityRow } from "../components/PriorityRow";
 import { PoleCard } from "../components/PoleCard";
 import {
-  OVERVIEW_CARDS as DEFAULT_OVERVIEW,
-  BUSINESS_UNITS as DEFAULT_UNITS,
-  SUPPORT_POLES as DEFAULT_POLES,
+  OVERVIEW_CARDS,
+  BUSINESS_UNITS,
+  SUPPORT_POLES,
   ALERTS as DEFAULT_ALERTS,
   TOOLS as DEFAULT_TOOLS,
+  type BusinessUnit,
+  type SupportPole,
+  type Alert,
 } from "../constants/data";
 
 interface Props {
@@ -28,20 +31,40 @@ interface Props {
 const WEBHOOK_URL = "https://blueplanet.app.n8n.cloud/webhook/dashboard-data";
 
 export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
-  const [businessUnits, setBusinessUnits] = useState<any[]>(DEFAULT_UNITS);
-  const [supportPoles, setSupportPoles] = useState<any[]>(DEFAULT_POLES);
-  const [overviewCards, setOverviewCards] = useState<any[]>(DEFAULT_OVERVIEW);
-  const [alerts, setAlerts] = useState<any[]>(DEFAULT_ALERTS);
+  const [businessUnits, setBusinessUnits] =
+    useState<BusinessUnit[]>(BUSINESS_UNITS);
+  const [supportPoles, setSupportPoles] =
+    useState<SupportPole[]>(SUPPORT_POLES);
+  const [alerts, setAlerts] = useState<Alert[]>(DEFAULT_ALERTS);
   const [tools, setTools] = useState<string[]>(DEFAULT_TOOLS);
 
   useEffect(() => {
     fetch(WEBHOOK_URL)
       .then((r) => r.json())
       .then((d) => {
-        if (d.businessUnits?.length) setBusinessUnits(d.businessUnits);
-        if (d.supportPoles?.length) setSupportPoles(d.supportPoles);
-        if (d.overviewCards?.length) setOverviewCards(d.overviewCards);
+        // Merger businessUnits : garder icônes statiques, mettre à jour le statut
+        if (d.businessUnits?.length) {
+          setBusinessUnits(
+            BUSINESS_UNITS.map((unit) => {
+              const w = d.businessUnits.find((x: any) => x.id === unit.id);
+              if (!w) return unit;
+              return { ...unit, status: w.status || unit.status };
+            }),
+          );
+        }
+        // Merger supportPoles : pareil
+        if (d.supportPoles?.length) {
+          setSupportPoles(
+            SUPPORT_POLES.map((pole) => {
+              const w = d.supportPoles.find((x: any) => x.id === pole.id);
+              if (!w) return pole;
+              return { ...pole, status: w.status || pole.status };
+            }),
+          );
+        }
+        // Alertes : directement du webhook
         if (d.alerts?.length) setAlerts(d.alerts);
+        // Outils : normaliser strings
         if (d.tools?.length) {
           setTools(
             d.tools.map((t: any) => (typeof t === "string" ? t : t.name || "")),
@@ -64,8 +87,8 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
     <div className="space-y-6">
       {/* KPIs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        {overviewCards.map((card, i) => (
-          <OverviewCard key={card.title ?? i} card={card} />
+        {OVERVIEW_CARDS.map((card) => (
+          <OverviewCard key={card.title} card={card} />
         ))}
       </div>
 
@@ -97,7 +120,7 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
           />
           <div className="mt-4 space-y-2">
             {sortedByPriority.map((unit, i) => (
-              <PriorityRow key={unit.id ?? i} unit={unit} rank={i} />
+              <PriorityRow key={unit.id} unit={unit} rank={i} />
             ))}
           </div>
         </Card>
@@ -120,14 +143,14 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
             <option value="all">Toutes les activités</option>
             {businessUnits.map((u) => (
               <option key={u.id} value={u.id}>
-                {u.name || u.title}
+                {u.title}
               </option>
             ))}
           </select>
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {filteredUnits.map((unit, i) => (
-            <PoleCard key={unit.id ?? i} pole={unit} />
+          {filteredUnits.map((unit) => (
+            <PoleCard key={unit.id} pole={unit} />
           ))}
         </div>
       </div>
@@ -141,8 +164,8 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
           color="sky"
         />
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {supportPoles.map((pole, i) => (
-            <PoleCard key={pole.id ?? i} pole={pole} compact />
+          {supportPoles.map((pole) => (
+            <PoleCard key={pole.id} pole={pole} compact />
           ))}
         </div>
       </div>
