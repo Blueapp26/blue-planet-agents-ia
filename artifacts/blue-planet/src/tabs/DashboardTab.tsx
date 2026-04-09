@@ -16,10 +16,7 @@ import {
   OVERVIEW_CARDS,
   BUSINESS_UNITS,
   SUPPORT_POLES,
-  ALERTS as DEFAULT_ALERTS,
   TOOLS as DEFAULT_TOOLS,
-  type BusinessUnit,
-  type SupportPole,
   type Alert,
 } from "../constants/data";
 
@@ -31,43 +28,33 @@ interface Props {
 const WEBHOOK_URL = "https://blueplanet.app.n8n.cloud/webhook/dashboard-data";
 
 export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
-  const [businessUnits, setBusinessUnits] =
-    useState<BusinessUnit[]>(BUSINESS_UNITS);
-  const [supportPoles, setSupportPoles] =
-    useState<SupportPole[]>(SUPPORT_POLES);
-  const [alerts, setAlerts] = useState<Alert[]>(DEFAULT_ALERTS);
+  const [alerts, setAlerts] = useState<Alert[]>([]);
   const [tools, setTools] = useState<string[]>(DEFAULT_TOOLS);
 
   useEffect(() => {
     fetch(WEBHOOK_URL)
       .then((r) => r.json())
       .then((d) => {
-        // Merger businessUnits : garder icônes statiques, mettre à jour le statut
-        if (d.businessUnits?.length) {
-          setBusinessUnits(
-            BUSINESS_UNITS.map((unit) => {
-              const w = d.businessUnits.find((x: any) => x.id === unit.id);
-              if (!w) return unit;
-              return { ...unit, status: w.status || unit.status };
-            }),
+        // Normaliser les alertes pour correspondre au format attendu par AlertItem
+        if (d.alerts?.length) {
+          setAlerts(
+            d.alerts.map((a: any) => ({
+              text: String(a.text || a.message || ""),
+              severity: ["high", "medium", "low"].includes(a.severity)
+                ? a.severity
+                : "medium",
+              pole: String(a.category || a.pole || ""),
+            })),
           );
         }
-        // Merger supportPoles : pareil
-        if (d.supportPoles?.length) {
-          setSupportPoles(
-            SUPPORT_POLES.map((pole) => {
-              const w = d.supportPoles.find((x: any) => x.id === pole.id);
-              if (!w) return pole;
-              return { ...pole, status: w.status || pole.status };
-            }),
-          );
-        }
-        // Alertes : directement du webhook
-        if (d.alerts?.length) setAlerts(d.alerts);
-        // Outils : normaliser strings
+        // Normaliser les outils en strings
         if (d.tools?.length) {
           setTools(
-            d.tools.map((t: any) => (typeof t === "string" ? t : t.name || "")),
+            d.tools
+              .map((t: any) =>
+                typeof t === "string" ? t : String(t.name || ""),
+              )
+              .filter(Boolean),
           );
         }
       })
@@ -76,11 +63,11 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
 
   const filteredUnits =
     selectedUnit === "all"
-      ? businessUnits
-      : businessUnits.filter((u) => u.id === selectedUnit);
+      ? BUSINESS_UNITS
+      : BUSINESS_UNITS.filter((u) => u.id === selectedUnit);
 
-  const sortedByPriority = [...businessUnits].sort(
-    (a, b) => (a.priority || 0) - (b.priority || 0),
+  const sortedByPriority = [...BUSINESS_UNITS].sort(
+    (a, b) => a.priority - b.priority,
   );
 
   return (
@@ -141,7 +128,7 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
             className="rounded-lg border border-white/[0.08] bg-white/[0.03] px-3 py-2 text-xs text-slate-300 outline-none focus:border-white/20 transition"
           >
             <option value="all">Toutes les activités</option>
-            {businessUnits.map((u) => (
+            {BUSINESS_UNITS.map((u) => (
               <option key={u.id} value={u.id}>
                 {u.title}
               </option>
@@ -164,7 +151,7 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
           color="sky"
         />
         <div className="mt-4 grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
-          {supportPoles.map((pole) => (
+          {SUPPORT_POLES.map((pole) => (
             <PoleCard key={pole.id} pole={pole} compact />
           ))}
         </div>
