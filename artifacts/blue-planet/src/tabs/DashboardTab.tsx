@@ -6,7 +6,7 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
-import { OrganigrammeAgents } from "../components/OrganigrammeAgents";
+import OrganigrammeAgents from "../components/OrganigrammeAgents";
 import { Card } from "../components/Card";
 import { SectionHeader } from "../components/SectionHeader";
 import { OverviewCard } from "../components/OverviewCard";
