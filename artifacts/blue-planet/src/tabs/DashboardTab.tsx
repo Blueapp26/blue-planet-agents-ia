@@ -6,6 +6,7 @@ import {
   TrendingUp,
   Zap,
 } from "lucide-react";
+import { OrganigrammeAgents } from "../components/OrganigrammeAgents";
 import { Card } from "../components/Card";
 import { SectionHeader } from "../components/SectionHeader";
 import { OverviewCard } from "../components/OverviewCard";
@@ -174,6 +175,18 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
               {tool}
             </span>
           ))}
+        </div>
+      </Card>
+      {/* Organigramme Agents */}
+      <Card className="p-5">
+        <SectionHeader
+          label="Architecture"
+          title="Organigramme des Agents IA"
+          icon={Layers}
+          color="purple"
+        />
+        <div className="mt-4">
+          <OrganigrammeAgents />
         </div>
       </Card>
     </div>
