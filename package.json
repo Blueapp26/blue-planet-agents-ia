@@ -3,9 +3,16 @@
   "version": "0.0.0",
   "license": "MIT",
   "scripts": {
-    "start": "ts-node server.ts",
-    "build": "pnpm run typecheck && pnpm -r --if-present run build",
-    "typecheck": "tsc --noEmit"
+    "dev": "concurrently \"npm run dev:server\" \"npm run dev:client\"",
+    "dev:server": "cd server && ts-node src/server.ts",
+    "dev:client": "cd client && npm run dev",
+    "build": "npm run build:client && npm run build:server",
+    "build:server": "cd server && tsc",
+    "build:client": "cd client && npm run build",
+    "start": "node server/dist/server.js",
+    "test:rss": "curl http://localhost:3000/rss",
+    "test:health": "curl http://localhost:3000/health",
+    "test:articles": "curl http://localhost:3000/api/articles"
   },
   "private": true,
   "dependencies": {
@@ -16,6 +23,7 @@
     "@types/cors": "^2.8.13",
     "@types/rss": "^0.0.32",
     "ts-node": "^10.9.1",
-    "typescript": "~5.9.2"
+    "typescript": "~5.9.2",
+    "concurrently": "^8.2.0"
   }
 }
