@@ -5,6 +5,9 @@ import {
   Layers,
   TrendingUp,
   Zap,
+  MapPin,    // Ajouté
+  Loader2,   // Ajouté
+  Send       // Ajouté
 } from "lucide-react";
 import OrganigrammeAgents from "../components/OrganigrammeAgents";
 import { Card } from "../components/Card";
@@ -26,17 +29,24 @@ interface Props {
   setSelectedUnit: (unit: string) => void;
 }
 
+// URL pour récupérer les stats (existante)
 const WEBHOOK_URL = "https://blueplanet.app.n8n.cloud/webhook/dashboard-data";
+// URL pour déclencher tes agents (À REMPLACER PAR TON URL DE WEBHOOK N8N)
+const N8N_AGENT_TRIGGER_URL = "https://TON_INSTANCE.n8n.cloud/webhook/ton-id-agent";
 
 export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
   const [tools, setTools] = useState<string[]>(DEFAULT_TOOLS);
 
+  // --- NOUVEAUX ÉTATS POUR LES AGENTS IA ---
+  const [locationInput, setLocationInput] = useState("");
+  const [isGenerating, setIsGenerating] = useState(false);
+  const [generationStatus, setGenerationStatus] = useState<string | null>(null);
+
   useEffect(() => {
     fetch(WEBHOOK_URL)
       .then((r) => r.json())
       .then((d) => {
-        // Normaliser les alertes pour correspondre au format attendu par AlertItem
         if (d.alerts?.length) {
           setAlerts(
             d.alerts.map((a: any) => ({
@@ -48,7 +58,6 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
             })),
           );
         }
-        // Normaliser les outils en strings
         if (d.tools?.length) {
           setTools(
             d.tools
@@ -61,6 +70,34 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
       })
       .catch((e) => console.error("Dashboard fetch error:", e));
   }, []);
+
+  // --- FONCTION POUR LANCER LES AGENTS ---
+  const handleTriggerAgents = async () => {
+    if (!locationInput) return;
+
+    setIsGenerating(true);
+    setGenerationStatus("Nova coordonne l'équipe...");
+
+    try {
+      const response = await fetch(N8N_AGENT_TRIGGER_URL, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ lieu: locationInput }),
+      });
+
+      if (response.ok) {
+        setGenerationStatus("Succès ! L'article est en cours de publication par Alexis.");
+        setLocationInput("");
+      } else {
+        setGenerationStatus("Erreur lors du lancement des agents.");
+      }
+    } catch (error) {
+      setGenerationStatus("Erreur de connexion avec n8n.");
+    } finally {
+      setIsGenerating(false);
+      setTimeout(() => setGenerationStatus(null), 5000);
+    }
+  };
 
   const filteredUnits =
     selectedUnit === "all"
@@ -79,6 +116,46 @@ export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
           <OverviewCard key={card.title} card={card} />
         ))}
       </div>
+
+      {/* --- NOUVELLE SECTION : GÉNÉRATEUR BLUE PLANET APP --- */}
+      <Card className="p-5 border-indigo-500/20 bg-indigo-500/5">
+        <SectionHeader
+          label="Blue Planet App"
+          title="Générateur d'articles IA"
+          icon={Send}
+          color="indigo"
+        />
+        <div className="mt-4 flex flex-col gap-4 sm:flex-row">
+          <div className="relative flex-1">
+            <MapPin className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-slate-500" />
+            <input
+              type="text"
+              value={locationInput}
+              onChange={(e) => setLocationInput(e.target.value)}
+              placeholder="Ex: Le Colisée, Rome..."
+              className="w-full rounded-lg border border-white/10 bg-white/5 pl-10 pr-4 py-2 text-sm text-slate-200 outline-none focus:border-indigo-500/50 transition"
+              disabled={isGenerating}
+            />
+          </div>
+          <button
+            onClick={handleTriggerAgents}
+            disabled={isGenerating || !locationInput}
+            className="flex items-center justify-center gap-2 rounded-lg bg-indigo-600 px-6 py-2 text-sm font-medium text-white hover:bg-indigo-500 disabled:opacity-50 disabled:cursor-not-allowed transition"
+          >
+            {isGenerating ? (
+              <>
+                <Loader2 className="h-4 w-4 animate-spin" />
+                Production en cours...
+              </>
+            ) : (
+              "Lancer les Agents"
+            )}
+          </button>
+        </div>
+        {generationStatus && (
+          <p className="mt-2 text-xs text-indigo-300 italic">{generationStatus}</p>
+        )}
+      </Card>
 
       {/* Alertes + Priorités */}
       <div className="grid gap-4 lg:grid-cols-[1fr_1fr]">
