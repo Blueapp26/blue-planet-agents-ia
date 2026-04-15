@@ -32,7 +32,7 @@ interface Props {
 // URL pour récupérer les stats (existante)
 const WEBHOOK_URL = "https://blueplanet.app.n8n.cloud/webhook/dashboard-data";
 // URL pour déclencher tes agents (À REMPLACER PAR TON URL DE WEBHOOK N8N)
-const N8N_AGENT_TRIGGER_URL = "https://TON_INSTANCE.n8n.cloud/webhook/ton-id-agent";
+const N8N_AGENT_TRIGGER_URL = "https://blueplanet.app.n8n.cloud/webhook/blue-planet-content";
 
 export function DashboardTab({ selectedUnit, setSelectedUnit }: Props) {
   const [alerts, setAlerts] = useState<Alert[]>([]);
