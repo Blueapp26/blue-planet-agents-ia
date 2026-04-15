@@ -1,6 +1,6 @@
-import express, { Request, Response } from "express";
-import RSS from "rss";
-import cors from "cors";
+const express = require("express");
+const RSS = require("rss");
+const cors = require("cors");
 
 const app = express();
 app.use(express.json());
@@ -16,10 +16,10 @@ interface Article {
   date: Date;
 }
 
-let articlesDB: Article[] = [];
+let articlesDB = [];
 
-// ✅ ROUTE RSS (Doit être AVANT le catch-all React)
-app.get("/rss", (req: Request, res: Response) => {
+// ✅ ROUTE RSS
+app.get("/rss", (req, res) => {
   try {
     const feed = new RSS({
       title: "Blue Planet App Feed",
@@ -49,7 +49,7 @@ app.get("/rss", (req: Request, res: Response) => {
 });
 
 // ✅ HEALTH CHECK
-app.get("/health", (req: Request, res: Response) => {
+app.get("/health", (req, res) => {
   res.json({
     status: "ok",
     articles: articlesDB.length,
@@ -58,7 +58,7 @@ app.get("/health", (req: Request, res: Response) => {
 });
 
 // ✅ SAVE ARTICLE
-app.post("/api/save-article", (req: Request, res: Response) => {
+app.post("/api/save-article", (req, res) => {
   try {
     const { title, body_html, image_url, category, lat, lng } = req.body;
 
@@ -66,7 +66,7 @@ app.post("/api/save-article", (req: Request, res: Response) => {
       return res.status(400).json({ error: "title et image_url requis" });
     }
 
-    const newArticle: Article = {
+    const newArticle = {
       title,
       content: body_html || "",
       image_url,
@@ -77,9 +77,6 @@ app.post("/api/save-article", (req: Request, res: Response) => {
     };
 
     articlesDB.unshift(newArticle);
-
-    // Si tu veux sauver en Airtable (optionnel):
-    // await saveToAirtable(newArticle);
 
     console.log(`✅ Article reçu : ${title} (${category})`);
     res.status(200).json({
@@ -93,7 +90,7 @@ app.post("/api/save-article", (req: Request, res: Response) => {
 });
 
 // ✅ LIST ARTICLES
-app.get("/api/articles", (req: Request, res: Response) => {
+app.get("/api/articles", (req, res) => {
   res.json({
     count: articlesDB.length,
     articles: articlesDB,
@@ -101,7 +98,7 @@ app.get("/api/articles", (req: Request, res: Response) => {
 });
 
 // ✅ DELETE ARTICLE
-app.delete("/api/articles/:index", (req: Request, res: Response) => {
+app.delete("/api/articles/:index", (req, res) => {
   const index = parseInt(req.params.index);
   if (index >= 0 && index < articlesDB.length) {
     articlesDB.splice(index, 1);
@@ -111,53 +108,17 @@ app.delete("/api/articles/:index", (req: Request, res: Response) => {
   }
 });
 
-// ✅ STATIC FILES (si tu serves React depuis Express)
-app.use(express.static("dist"));
-
-// ✅ React CATCH-ALL (DOIT ÊTRE DERNIER!)
-app.get("*", (req: Request, res: Response) => {
-  res.sendFile(__dirname + "/../dist/index.html");
-});
-
 // ✅ START SERVER
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 3001;
 app.listen(PORT, () => {
   console.log(`
 ╔════════════════════════════════════════╗
 ║ 🌍 BLUE PLANET SERVER STARTED          ║
 ╠════════════════════════════════════════╣
-║ 🚀 Port: ${PORT}                       ║
-║ 📡 RSS: http://localhost:${PORT}/rss   ║
+║ 🚀 Port: ${PORT}
+║ 📡 RSS: http://localhost:${PORT}/rss
 ║ 🏥 Health: http://localhost:${PORT}/health
 ║ 📊 Articles: http://localhost:${PORT}/api/articles
 ╚════════════════════════════════════════╝
   `);
 });
-
-// (Optionnel) Fonction Airtable si tu veux l'activer
-/*
-import Airtable from 'airtable';
-
-async function saveToAirtable(article: Article) {
-  try {
-    const base = new Airtable({ apiKey: process.env.AIRTABLE_API_KEY }).base(
-      process.env.AIRTABLE_BASE_ID || ''
-    );
-    const table = base('Articles');
-
-    await table.create([{
-      fields: {
-        Title: article.title,
-        Description: article.content,
-        Latitude: parseFloat(article.lat),
-        Longitude: parseFloat(article.lng),
-        ImageUrl: article.image_url,
-        Category: article.category,
-        HtmlContent: article.content,
-      }
-    }]);
-  } catch (error) {
-    console.error('Airtable save error:', error);
-  }
-}
-*/
