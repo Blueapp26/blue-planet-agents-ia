@@ -1,5 +1,5 @@
 import RSS from 'rss';
-import { articles } from '../models/data';
+import { articles } from '../models/articles-store';
 
 export class RssService {
   generateFeed() {

@@ -1,7 +1,6 @@
 export interface Article {
   id: string;
   title: string;
-  description: string;
   body_html: string;
   lat: number;
   lng: number;
@@ -10,3 +9,5 @@ export interface Article {
   created_at: string;
   location_hash: string;
 }
+
+export const articles: Article[] = [];

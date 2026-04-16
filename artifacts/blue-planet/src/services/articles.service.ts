@@ -1,5 +1,5 @@
-import { articles } from '../models/data';
-import { createLocationHash, isDuplicate } from '../helpers';
+import { articles } from '../models/articles-store';
+import { createLocationHash, isDuplicate } from '../utils/helpers';
 
 export class ArticlesService {
   getAllArticles() {

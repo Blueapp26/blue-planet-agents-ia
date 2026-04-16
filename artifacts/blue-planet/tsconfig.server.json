@@ -1,0 +1,30 @@
+{
+  "compilerOptions": {
+    "target": "ES2020",
+    "module": "commonjs",
+    "moduleResolution": "node",
+    "lib": ["ES2020"],
+    "outDir": "./dist/server",
+    "rootDir": "./src",
+    "strict": true,
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true,
+    "resolveJsonModule": true,
+    "allowSyntheticDefaultImports": true,
+    "declaration": true,
+    "sourceMap": true,
+    "noEmit": false,
+    "jsx": "preserve"
+  },
+  "include": [
+    "src/server.ts",
+    "src/routes/**/*.ts",
+    "src/controllers/**/*.ts",
+    "src/services/articles.service.ts",
+    "src/services/rss.service.ts",
+    "src/models/Article.ts",
+    "src/helpers.ts"
+  ],
+  "exclude": ["node_modules", "dist", "src/components", "src/tabs", "src/services/api.ts"]
+}
