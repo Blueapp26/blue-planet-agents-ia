@@ -1,6 +1,6 @@
 import { COLOR_STYLES } from "../styles/colors";
 import { Card } from "./Card";
-import type { OverviewCard as OverviewCardType } from "../constants/data";
+import type { OverviewCard as OverviewCardType } from "../models/data";
 
 interface Props {
   card: OverviewCardType;

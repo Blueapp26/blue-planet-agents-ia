@@ -1,6 +1,6 @@
 import { COLOR_STYLES } from "../styles/colors";
 import { StatusBadge } from "./StatusBadge";
-import type { BusinessUnit } from "../constants/data";
+import type { BusinessUnit } from "../models/data";
 
 interface Props {
   unit: BusinessUnit;

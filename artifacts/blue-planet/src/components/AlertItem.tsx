@@ -1,5 +1,5 @@
 import { SEVERITY_STYLES } from "../styles/colors";
-import type { Alert } from "../constants/data";
+import type { Alert } from "../models/data";
 
 interface Props {
   alert: Alert;

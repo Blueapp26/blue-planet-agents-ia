@@ -6,8 +6,8 @@ import { MissionTab } from "./tabs/MissionTab";
 import { OrgTab } from "./tabs/OrgTab";
 import { HistoryTab } from "./tabs/HistoryTab";
 import { runDirectorAnalysis } from "./services/api";
-import { DEFAULT_MISSION } from "./constants/data";
-import type { DirectorResponse } from "./constants/data";
+import { DEFAULT_MISSION } from "./models/data";
+import type { DirectorResponse } from "./models/data";
 
 type TabId = "dashboard" | "mission" | "org" | "history";
 type ApiStatus = "idle" | "success" | "error";

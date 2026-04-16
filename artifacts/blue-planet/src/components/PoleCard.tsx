@@ -1,7 +1,7 @@
 import { COLOR_STYLES } from "../styles/colors";
 import { StatusBadge } from "./StatusBadge";
 import { HealthBadge } from "./HealthBadge";
-import type { SupportPole, BusinessUnit } from "../constants/data";
+import type { SupportPole, BusinessUnit } from "../models/data";
 
 interface Props {
   pole: SupportPole | BusinessUnit;

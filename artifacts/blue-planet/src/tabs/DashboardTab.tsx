@@ -22,7 +22,7 @@ import {
   SUPPORT_POLES,
   TOOLS as DEFAULT_TOOLS,
   type Alert,
-} from "../constants/data";
+} from "../models/data";
 
 interface Props {
   selectedUnit: string;

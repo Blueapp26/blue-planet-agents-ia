@@ -1,6 +1,6 @@
 import { COLOR_STYLES } from "../styles/colors";
 import { Card } from "./Card";
-import type { HistoryEntry } from "../constants/data";
+import type { HistoryEntry } from "../models/data";
 
 interface Props {
   item: HistoryEntry;
